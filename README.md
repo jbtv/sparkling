@@ -1,5 +1,7 @@
 # Sparkling - A Clojure API for Apache Spark
 
+[![Join the chat at https://gitter.im/jbtv/sparkling](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jbtv/sparkling?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Sparkling is a Clojure API for [Apache Spark](http://spark.apache.org/).
 
 
