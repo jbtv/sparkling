@@ -59,6 +59,14 @@
 (defn kafka-stream [& {:keys [streaming-context zk-connect group-id topic-map]}]
   (KafkaUtils/createStream streaming-context zk-connect group-id (into {} (for [[k, v] topic-map] [k (Integer. v)]))))
 
+(defn kafka-direct-stream [streaming-context & {:keys [key-class val-class key-decoder-class val-decoder-class kafka-params topics]
+                                                :or {key-class String
+                                                     val-class String
+                                                     key-decoder-class kafka.serializer.StringDecoder
+                                                     val-decoder-class kafka.serializer.StringDecoder
+                                                     kafka-params {"metadata.broker.list" "localhost:9092"}}}]
+  (KafkaUtils/createDirectStream streaming-context key-class val-class key-decoder-class val-decoder-class kafka-params topics))
+
 (defn flat-map [dstream f]
   (.flatMap dstream (flat-map-function f)))
 
