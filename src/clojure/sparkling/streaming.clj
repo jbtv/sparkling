@@ -4,9 +4,10 @@
 ;; Spark Streaming; consider it a work in progress.
 ;;
 (ns sparkling.streaming
-  (:refer-clojure :exclude [map time print union count])
+  (:refer-clojure :exclude [map filter time print union count])
   (:require [sparkling.api :as s]
             [sparkling.conf :as conf]
+            [sparkling.utils :as u]
             [sparkling.function :refer [flat-map-function
                                      function
                                      function2
@@ -15,7 +16,11 @@
   (:import [org.apache.spark.streaming.api.java JavaStreamingContext JavaDStream]
            [org.apache.spark.streaming.kafka KafkaUtils]
            [org.apache.spark.streaming Duration Time]
-           (scala Tuple2)))
+           [scala Tuple2]))
+
+(defn- ftruthy?
+  [f]
+  (fn [x] (u/truthy? (f x))))
 
 
 (defn untuple [^Tuple2 t]
@@ -59,6 +64,9 @@
 
 (defn map [dstream f]
   (.map dstream (function f)))
+
+(defn filter [dstream f]
+  (.filter dstream (function (ftruthy? f))))
 
 (defn reduce-by-key [dstream f]
   "Call reduceByKey on dstream of type JavaDStream or JavaPairDStream"
