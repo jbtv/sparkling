@@ -17,7 +17,7 @@
 
 
 (defn first-value-fn
-  "Wraps a function f so that when the wrapped function is called on a tuple2, f is called with the second element from that tuple."
+  "Wraps a function f so that when the wrapped function is called on a tuple2, f is called with the first element from that tuple."
   [f]
   (fn [^Tuple2 tuple]
     (f (._1 tuple))))
