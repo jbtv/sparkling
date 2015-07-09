@@ -4,7 +4,7 @@
   (:import [scala Tuple2 Tuple3]
            [com.google.common.base Optional]))
 
-(defn optional-of [v] (Optional/of v))
+(defn optional-of [v] (if (nil? v) (Optional/absent) (Optional/of v)))
 (defn optional-or-nil [^Optional o] (.orNull o))
 
 (defn tuple [key value]
