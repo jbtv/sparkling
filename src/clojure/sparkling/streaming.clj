@@ -8,14 +8,12 @@
   (:require [sparkling.api :as s]
             [sparkling.conf :as conf]
             [sparkling.utils :as u]
-            [sparkling.function :refer [flat-map-function
-                                     function
-                                     function2
-                                     pair-function
-                                     void-function]])
-  (:import [org.apache.spark.streaming.api.java JavaStreamingContext JavaDStream]
+            [sparkling.destructuring :refer [optional-of optional-or-nil] ]
+            [sparkling.function :refer [flat-map-function function function2 pair-function void-function]])
+  (:import [org.apache.spark.streaming.api.java JavaStreamingContext JavaDStream JavaPairDStream]
            [org.apache.spark.streaming.kafka KafkaUtils]
            [org.apache.spark.streaming Duration Time]
+           [com.google.common.base Optional]
            [scala Tuple2]))
 
 (defn- ftruthy?
@@ -67,14 +65,15 @@
                                                      kafka-params {"metadata.broker.list" "localhost:9092"}}}]
   (KafkaUtils/createDirectStream streaming-context key-class val-class key-decoder-class val-decoder-class kafka-params topics))
 
-(defn flat-map [dstream f]
-  (.flatMap dstream (flat-map-function f)))
+(defn flat-map      [dstream f] (.flatMap   dstream (flat-map-function f)))
+(defn map             [dstream f] (.map       dstream (function f)))
+(defn filter             [dstream f] (.filter    dstream (function (ftruthy? f))))
+(defn map-values    [dstream f] (.mapValues dstream (function f)))
+(defn filter-values [dstream f] (filter          dstream #(-> % ._2 f)))
+(defn map-to-pair   [dstream f] (.mapToPair dstream (pair-function f)))
 
-(defn map [dstream f]
-  (.map dstream (function f)))
-
-(defn filter [dstream f]
-  (.filter dstream (function (ftruthy? f))))
+(defn count         [dstream] (.count      dstream))
+(defn group-by-key  [dstream] (.groupByKey dstream))
 
 (defn reduce-by-key [dstream f]
   "Call reduceByKey on dstream of type JavaDStream or JavaPairDStream"
@@ -89,29 +88,22 @@
         (.reduceByKey (function2 f))
         (.map (function untuple)))))
 
-(defn map-to-pair [dstream f]
-  (.mapToPair dstream (pair-function f)))
-
+(defn update-state-by-key [dstream f]
+  (letfn [(wrapped-f [seq opt-state]
+            (optional-of
+             (f seq (optional-or-nil opt-state))))]
+    (.updateStateByKey dstream (function2 wrapped-f))))
 
 ;; ## Transformations
 ;;
-(defn transform [dstream f]
-  (.transform dstream (function f)))
-
-(defn repartition [dstream num-partitions]
-  (.repartition dstream (Integer. num-partitions)))
-
-(defn union [dstream other-stream]
-  (.union dstream other-stream))
-
+(defn transform   [dstream f]              (.transform dstream (function f)))
+(defn repartition [dstream num-partitions] (.repartition dstream (Integer. num-partitions)))
+(defn union       [dstream other-stream]   (.union dstream other-stream))
 
 ;; ## Window Operations
 ;;
 (defn window [dstream window-length slide-interval]
   (.window dstream (duration window-length) (duration slide-interval)))
-
-(defn count [dstream]
-  (.count dstream))
 
 (defn count-by-window [dstream window-length slide-interval]
   (.countByWindow dstream (duration window-length) (duration slide-interval)))
@@ -134,7 +126,9 @@
 
 ;; ## Actions
 ;;
-(def print (memfn print))
+(defn print
+  ( [dstream]       (.print dstream))
+  ( [dstream count] (.print dstream count)))
 
 (defn foreach-rdd [dstream f]
   (.foreachRDD dstream (function2 f)))
