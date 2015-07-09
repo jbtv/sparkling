@@ -9,7 +9,7 @@
             [sparkling.conf :as conf]
             [sparkling.utils :as u]
             [sparkling.destructuring :refer [optional-of optional-or-nil] ]
-            [sparkling.function :refer [flat-map-function function function2 pair-function void-function]])
+            [sparkling.function :refer [flat-map-function function function2 function3 pair-function void-function]])
   (:import [org.apache.spark.streaming.api.java JavaStreamingContext JavaDStream JavaPairDStream]
            [org.apache.spark.streaming.kafka KafkaUtils]
            [org.apache.spark.streaming Duration Time]
@@ -101,9 +101,11 @@
 
 ;; ## Transformations
 ;;
-(defn transform   [dstream f]              (.transform dstream (function f)))
-(defn repartition [dstream num-partitions] (.repartition dstream (Integer. num-partitions)))
-(defn union       [dstream other-stream]   (.union dstream other-stream))
+(defn transform                [dstream f]              (.transform           dstream (function f)))
+(defn transform-with           [dstream other-stream f] (.transformWith       dstream other-stream (function3 f)))
+(defn transform-with-to-pair   [dstream other-stream f] (.transformWithToPair dstream other-stream (function3 f)))
+(defn repartition              [dstream num-partitions] (.repartition         dstream (Integer. num-partitions)))
+(defn union                    [dstream other-stream]   (.union               dstream other-stream))
 
 ;; ## Window Operations
 ;;
