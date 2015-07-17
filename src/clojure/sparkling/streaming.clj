@@ -102,10 +102,13 @@
 ;; ## Transformations
 ;;
 (defn transform                [dstream f]              (.transform           dstream (function f)))
+(defn transform-to-pair        [dstream f]              (.transformToPair     dstream (function f)))
 (defn transform-with           [dstream other-stream f] (.transformWith       dstream other-stream (function3 f)))
 (defn transform-with-to-pair   [dstream other-stream f] (.transformWithToPair dstream other-stream (function3 f)))
 (defn repartition              [dstream num-partitions] (.repartition         dstream (Integer. num-partitions)))
 (defn union                    [dstream other-stream]   (.union               dstream other-stream))
+(defn join                     [dstream other-stream]   (.join                dstream other-stream))
+(defn left-outer-join          [dstream other-stream]   (.leftOuterJoin       dstream other-stream)) ;; FIXME support all the arities
 
 ;; ## Window Operations
 ;;
