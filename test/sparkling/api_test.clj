@@ -13,7 +13,7 @@
             [sparkling.kryoserializer :as ks]
             [sparkling.testutils.records.domain :as domain]
             [sparkling.testutils :refer :all]
-            ))
+            [sparkling.destructuring :as s-de]))
 
 
 
@@ -135,7 +135,7 @@
                     (testing
                       "filter returns an RDD formed by selecting those elements of the source on which func returns true"
                       (is (equals-ignore-order? (-> (s/parallelize c [1 2 3 4 5 6])
-                                                    (s/filter (fn [x] (even? x)))
+                                                    (s/filter even?)
                                                     s/collect
                                                     vec)
                                                 [2 4 6])))
@@ -349,6 +349,25 @@
                                                     vec)
                                                 [["key1" 1] ["key1" 2] ["key2" 3] ["key2" 4] ["key3" 5]])))
 
+
+                    (testing
+                      "map-partitions-to-pair"
+                      (is (equals-ignore-order? (-> (s/parallelize-pairs c [#sparkling/tuple["key1" [1 2]]
+                                                                            #sparkling/tuple["key2" [3 4]]
+                                                                            #sparkling/tuple["key3" [5]]])
+                                                    (s/map-partitions-to-pair
+                                                      (fn [it]
+                                                        (map
+                                                          #(s/tuple (first (s-de/value %1)) (rest (s-de/value %1)))
+                                                          (iterator-seq it)))
+                                                      :preserves-partitioning false)
+                                                    s/collect
+                                                    untuple-all
+                                                    vec
+                                                    )
+                                                [[1 [2]] [3 [4]] [5 []]])))
+
+
                     (testing
                       "map-partition"
                       (is (equals-ignore-order? (-> (s/parallelize c [0 1 2 3 4])
@@ -384,6 +403,35 @@
                                                       vec)
                                                   [#sparkling/tuple[1 5] #sparkling/tuple[1 6] #sparkling/tuple[1 7] #sparkling/tuple[2 5] #sparkling/tuple[2 6] #sparkling/tuple[2 7]]
                                                   ))))
+
+                    (testing
+                        "intersection returns the common elements of two vectors"
+                      (let [rdd1 (s/parallelize c [1 2 3 4 5])
+                            rdd2 (s/parallelize c [1 3 5 7])]
+                        (is (equals-ignore-order? (-> (s/intersection rdd1 rdd2)
+                                                      s/collect
+                                                      vec)
+                                                  [1 3 5]))))
+                    (testing
+                        "subtract returns elements in the first RDD that not present in the second"
+                      (let [rdd1 (s/parallelize c [1 2 3 4 5])
+                            rdd2 (s/parallelize c [1 3 5])]
+                        (is (equals-ignore-order? (-> (s/subtract rdd1 rdd2)
+                                                      s/collect
+                                                      vec)
+                                                  [2 4]))))
+
+                    (testing
+                        "subtract-by-key returns elements by key in the first RDD that not present in the second"
+                      (let [rdd1 (s/parallelize-pairs c [#sparkling/tuple[1 4]
+                                                         #sparkling/tuple[2 5]
+                                                         #sparkling/tuple[3 6]])
+                            rdd2 (s/parallelize-pairs c [#sparkling/tuple[1 1]
+                                                         #sparkling/tuple[3 6]])]
+                        (is (equals-ignore-order? (-> (s/subtract-by-key rdd1 rdd2)
+                                                      s/collect
+                                                      vec)
+                                                  [#sparkling/tuple[2 5]]))))
 
 
                     ;TODO:                      (future-fact "repartition returns a new RDD with exactly n partitions")

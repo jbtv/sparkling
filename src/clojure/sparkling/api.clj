@@ -146,6 +146,20 @@
   [rdd1 rdd2]
   (sc/cartesian rdd1 rdd2))
 
+(defn intersection
+  [rdd1 rdd2]
+  (sc/intersection rdd1 rdd2))
+
+(defn subtract
+  "Removes all elements from rdd1 that are present in rdd2."
+  [rdd1 rdd2]
+  (sc/subtract rdd1 rdd2))
+
+(defn subtract-by-key
+  "Return each (key, value) pair in rdd1 that has no pair with matching key in rdd2."
+  [rdd1 rdd2]
+  (sc/subtract-by-key rdd1 rdd2))
+
 (defn group-by
   "Returns an RDD of items grouped by the return value of function `f`."
   ([rdd f]
@@ -274,9 +288,22 @@
   "Persists `rdd` with the default storage level (`MEMORY_ONLY`)."
   sc/cache)
 
+(def lookup
+  "Return the vector of values in the RDD for key `key`. Your key has to be serializable with the Java serializer (not Kryo like usual) to use this."
+  sc/lookup)
+
+
 (def collect
   "Returns all the elements of `rdd` as an array at the driver process."
   sc/collect)
+
+(def collect-map
+  "Retuns all elements of `pair-rdd` as a map at the driver process.
+  Attention: The resulting map will only have one entry per key.
+             Thus, if you have multiple tuples with the same key in the pair-rdd, the collection returned will not contain all elements!
+             The function itself will *not* issue a warning of any kind!"
+  sc/collect-map)
+
 
 (defn distinct
   "Return a new RDD that contains the distinct elements of the source `rdd`."
