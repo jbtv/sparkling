@@ -8,6 +8,6 @@ public class Function2 extends sparkling.serialization.AbstractSerializableWrapp
     }
 
     public Object call(Object v1, Object v2) throws Exception {
-    return f.invoke(v1, v2);
-  }
+        return f.invoke(v1, v2);
+    }
 }
