@@ -68,7 +68,10 @@
                                                      [commons-codec "1.4"]
                                                      [commons-io "2.4"]]}
              :spark-1.3.1  ^{:pom-scope :provided} {:dependencies
-                                                    [[org.apache.spark/spark-core_2.10 "1.3.1"]]}
+                                                    [[org.apache.spark/spark-core_2.10 "1.3.1"]
+                                                     [org.apache.spark/spark-streaming_2.10 "1.3.1"]
+                                                     [org.apache.spark/spark-streaming-kafka_2.10 "1.3.1"]
+                                                     ]}
 
              :test         {:resource-paths ["dev-resources" "data"]
                             :aot            [sparkling.core

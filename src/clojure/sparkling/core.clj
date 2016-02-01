@@ -270,6 +270,15 @@
      (u/unmangle-fn f)
      n)))
 
+;; FIXME this is C* specific
+;; sparkling not really the right place for it
+;; either beancounter, or a separate lib sparkling-cassandra
+(defn span-by
+  "Returns an RDD of items grouped by the return value of `f`, assuming that the items are ordered by
+  the return value of `f`. Faster than group-by."
+  ([f key-class rdd]
+   (.spanBy rdd (function f) key-class)))
+
 (defn group-by-key
   "Groups the values for each key in `rdd` into a single sequence."
   ([rdd]
