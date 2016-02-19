@@ -117,8 +117,8 @@
 
 ;; ## Transformations
 ;;
-(defn transform                [dstream f]              (.transform           dstream (function f)))
-(defn transform-to-pair        [dstream f]              (.transformToPair     dstream (function f)))
+(defn transform                [dstream f]              (.transform           dstream (function2 f)))
+(defn transform-to-pair        [dstream f]              (.transformToPair     dstream (function2 f)))
 (defn transform-with           [dstream other-stream f] (.transformWith       dstream other-stream (function3 f)))
 (defn transform-with-to-pair   [dstream other-stream f] (.transformWithToPair dstream other-stream (function3 f)))
 (defn repartition              [dstream num-partitions] (.repartition         dstream (Integer. num-partitions)))
