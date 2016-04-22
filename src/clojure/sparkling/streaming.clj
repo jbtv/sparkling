@@ -78,15 +78,14 @@
                                                      val-class String
                                                      key-decoder-class kafka.serializer.StringDecoder
                                                      val-decoder-class kafka.serializer.StringDecoder
-                                                     kafka-params {"metadata.broker.list" "localhost:9092"}}}]
-  (println "kafka dstream starting-from " starting-from)
+                                                     kafka-params {"metadata.broker.list" ["localhost:9092"]}}}]
   (if starting-from
     (let [x (KafkaUtils/createDirectStream streaming-context key-class val-class key-decoder-class val-decoder-class
                                            scala.Tuple2
                                            kafka-params
                                            (into {} (for [[[t p] o] starting-from]
                                                       [(kafka.common.TopicAndPartition. t p) (long o)]) ) ;; FIXME dangerous... need to fix type in kafka table to be bigint
-                                           (function (fn [m] (s/tuple (.key m) (.value m)))))]
+                                           (function (fn [mam] (s/tuple (.key mam) (.message mam)))))]
       (org.apache.spark.streaming.api.java.JavaPairInputDStream/fromInputDStream
        (.dstream x)
        (.Any scala.reflect.ClassTag$/MODULE$)
