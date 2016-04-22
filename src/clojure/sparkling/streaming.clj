@@ -73,13 +73,25 @@
 (defn kafka-stream [& {:keys [streaming-context zk-connect group-id topic-map]}]
   (KafkaUtils/createStream streaming-context zk-connect group-id (into {} (for [[k, v] topic-map] [k (Integer. v)]))))
 
-(defn kafka-direct-stream [streaming-context & {:keys [key-class val-class key-decoder-class val-decoder-class kafka-params topics]
+(defn kafka-direct-stream [streaming-context & {:keys [key-class val-class key-decoder-class val-decoder-class kafka-params topics starting-from]
                                                 :or {key-class String
                                                      val-class String
                                                      key-decoder-class kafka.serializer.StringDecoder
                                                      val-decoder-class kafka.serializer.StringDecoder
                                                      kafka-params {"metadata.broker.list" "localhost:9092"}}}]
-  (KafkaUtils/createDirectStream streaming-context key-class val-class key-decoder-class val-decoder-class kafka-params topics))
+  (println "kafka dstream starting-from " starting-from)
+  (if starting-from
+    (let [x (KafkaUtils/createDirectStream streaming-context key-class val-class key-decoder-class val-decoder-class
+                                           scala.Tuple2
+                                           kafka-params
+                                           (into {} (for [[[t p] o] starting-from]
+                                                      [(kafka.common.TopicAndPartition. t p) (long o)]) ) ;; FIXME dangerous... need to fix type in kafka table to be bigint
+                                           (function (fn [m] (s/tuple (.key m) (.value m)))))]
+      (org.apache.spark.streaming.api.java.JavaPairInputDStream/fromInputDStream
+       (.dstream x)
+       (.Any scala.reflect.ClassTag$/MODULE$)
+       (.Any scala.reflect.ClassTag$/MODULE$)))
+    (KafkaUtils/createDirectStream streaming-context key-class val-class key-decoder-class val-decoder-class kafka-params topics)))
 
 (defn flat-map      [dstream f] (.flatMap   dstream (flat-map-function f)))
 (defn map             [dstream f] (.map       dstream (function f)))
